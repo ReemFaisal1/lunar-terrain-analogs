@@ -1,13 +1,14 @@
 import json
 from pathlib import Path
 import numpy as np, pandas as pd
-from scipy.ndimage import uniform_filter
+from scipy.ndimage import uniform_filter, gaussian_filter
 from sites import SITES
 
 PROC, OUT = Path("data/processed"), Path("data/patches")
 OUT.mkdir(parents=True, exist_ok=True)
 P, STRIDE = 64, 32
 MAX_NAN, MAX_WATER = 0.02, 0.05
+EARTH_SIGMA = 1.5
 yy, xx = np.mgrid[0:P, 0:P]
 A = np.c_[xx.ravel(), yy.ravel(), np.ones(P*P)].astype("float64")
 PINV = np.linalg.pinv(A)
@@ -33,6 +34,8 @@ def extract(name, z, meta, body, coastal):
             if np.isnan(a).mean() > MAX_NAN: continue
             if bad is not None and bad[r:r+P, c:c+P].mean() > MAX_WATER: continue
             a = np.where(np.isnan(a), np.nanmean(a), a)
+            if body == "earth" and EARTH_SIGMA > 0:
+              a = gaussian_filter(a, EARTH_SIGMA, mode="nearest")
             out.append(detrend(a).astype("float16"))
             rows.append((body, name, r, c, x0+(c+P/2)*dx, y0+(r+P/2)*dy))
     return out, rows

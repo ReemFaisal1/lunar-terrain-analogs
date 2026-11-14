@@ -1,0 +1,5 @@
+regime,n_patches,covered_pct,dist_vs_T,known_zone_share_pct,saudi_share_pct,top_sites
+0,15619,17.3,1.37,11.5,11.2,"atacama 21%, grand_canyon 18%, hawaii 14%"
+1,25369,46.7,1.04,8.0,14.3,"atacama 23%, grand_canyon 13%, death_valley 8%"
+2,6648,0.5,1.9,19.4,0.0,"atacama 35%, hawaii 19%, etna 16%"
+3,8060,7.5,1.6,26.7,0.0,"atacama 24%, hawaii 19%, death_valley 18%"

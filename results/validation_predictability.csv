@@ -1,0 +1,7 @@
+target,features,R2_all,R2_moon_only,R2_earth_only
+shadow_always,slope/relief only,0.259,0.065,0.47
+shadow_always,embedding only,0.406,0.315,0.499
+shadow_always,both,0.425,0.33,0.523
+route_ratio,slope/relief only,0.723,0.83,0.699
+route_ratio,embedding only,0.609,0.763,0.575
+route_ratio,both,0.637,0.841,0.592
