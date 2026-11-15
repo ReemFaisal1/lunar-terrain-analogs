@@ -395,6 +395,7 @@ section{
   gap:2.8rem;
   align-items:start;
 }
+.row > *{min-width:0}
 .lbl{
   font-size:0.86rem;
   font-weight:600;
@@ -988,6 +989,7 @@ ol.limits li::before{
       <a href="#artemis">Artemis III</a>
       <a href="#sites">Earth Sites</a>
       <a href="#validation">Validation</a>
+      <a href="#mars">Mars</a>
     </div>
     <a href="#pairs" class="top-cta">Explore Pairs</a>
   </div>
@@ -1117,11 +1119,18 @@ ol.limits li::before{
   <div class="sheet row">
     <p class="lbl"><span class="sec-num">03</span>Artemis III<span>candidate landing regions</span></p>
     <div>
-      <h2>The regions NASA is most interested in are the hardest to rehearse</h2>
-      <p>Six of NASA's candidate landing regions, each approximated by the crater or massif it is
-        named after. The pattern follows the regime result: the more R2 terrain a region contains,
-        the less of it Earth can supply. For comparison, Earth matches 27.3% of the whole south pole
-        on the same measure.</p>
+      <h2>The candidate landing regions richest in rim terrain are the hardest to rehearse</h2>
+      <p><b>Why these six.</b> All six are among the 13 Artemis III candidate landing regions NASA
+        named in 2022, chosen for continuous sunlight through a 6.5-day surface stay, proximity to
+        permanently shadowed regions, safe slopes, communication with Earth and launch-window
+        availability. Four of them — Haworth, Malapert Massif, Nobile Rim and de Gerlache Rim — remain
+        on the nine-region shortlist NASA published in October 2024. I used these six because each is
+        named after a single crater or massif with published coordinates, so it can be placed on the
+        elevation map without guesswork; the shortlisted regions named after plains or unnamed peaks
+        were left out.</p>
+      <p>The pattern follows the regime result: the more R2 terrain a region contains, the less of
+        it Earth can supply. For comparison, Earth matches 27.3% of the whole south pole on the same
+        measure.</p>
       <div class="table-wrap">
         <table>
           <caption>NASA's candidate regions are about 15 km across; each is approximated here by the
@@ -1129,8 +1138,9 @@ ol.limits li::before{
             larger — for Peak near Shackleton, Shackleton crater itself. Enrichment divides a site's
             share of matches by its share of the Earth sample, separating genuine similarity from
             sample size. With six regions this is a visible pattern, not a statistically established
-            correlation.</caption>
-          <thead><tr><th>Region</th><th class="n">Latitude</th><th class="n">R2 share</th><th class="n">Matched</th><th class="bc"></th><th>Earth terrain supplying the matches</th></tr></thead>
+            correlation. Sources: <a href="https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/">NASA, October 2024</a>;
+            <a href="https://universetoday.com/157270/here-is-where-astronauts-might-land-on-the-moon">the 2022 list of 13</a>.</caption>
+          <thead><tr><th>Region</th><th>On NASA's 2024 shortlist</th><th class="n">Latitude</th><th class="n">R2 share</th><th class="n">Matched</th><th class="bc"></th><th>Earth terrain supplying the matches</th></tr></thead>
           <tbody id="artemis-rows"></tbody>
         </table>
       </div>
@@ -1197,9 +1207,37 @@ ol.limits li::before{
   </div>
 </section>
 
+<section id="mars">
+  <div class="sheet row">
+    <p class="lbl"><span class="sec-num">06</span>Mars<span>the other half of the challenge</span></p>
+    <div>
+      <h2>The same method applies to Mars</h2>
+      <p class="lede">Nothing in the pipeline is specific to the Moon. It takes elevation in, learns
+        terrain fingerprints without labels, and sets the bar for a match from the target world's own
+        terrain. Pointing it at Mars means new input data and a retrain — no new model design and no
+        labels.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Step</th><th>Moon, as built</th><th>Mars, what changes</th></tr></thead>
+          <tbody>
+            <tr><td>Elevation data</td><td>LOLA south-pole map, 80 m per pixel</td><td>NASA's MOLA global map (about 460 m per pixel), or HRSC and CTX stereo elevation models for detail at candidate sites</td></tr>
+            <tr><td>Common grid</td><td>Earth resampled to 80 m and smoothed to LOLA's sharpness</td><td>Earth resampled and smoothed to the chosen Mars dataset, using the same noise check</td></tr>
+            <tr><td>Patches and model</td><td>64 × 64 patches, autoencoder retrained on Moon and Earth</td><td>Same patch size and model, retrained on Mars and Earth</td></tr>
+            <tr><td>Shadow descriptor</td><td>Moon's radius, 1.5° sun</td><td>Mars's radius (3,389.5 km) and a sun angle set for the site's latitude</td></tr>
+            <tr><td>Match threshold</td><td>Held-out lunar terrain matched against itself</td><td>Held-out Martian terrain matched against itself</td></tr>
+            <tr><td>Earth sites</td><td>27 sites, including 7 lunar analogs</td><td>The same pool, tested against established Mars analogs — Haughton, the Atacama and the Dry Valleys are already in it</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The question it would answer is the same: which Martian terrain can Earth's analog sites
+        rehearse, and which can they not? This was not run during the hackathon; it is the next step.</p>
+    </div>
+  </div>
+</section>
+
 <section id="limits">
   <div class="sheet row">
-    <p class="lbl"><span class="sec-num">06</span>Limits<span>what this does not establish</span></p>
+    <p class="lbl"><span class="sec-num">07</span>Limits<span>what this does not establish</span></p>
     <div>
       <h2>Scope</h2>
       <ol class="limits">
@@ -1220,8 +1258,8 @@ ol.limits li::before{
         <li><b>Artemis regions are approximated</b> by the full disk of each named feature, which is
           larger than NASA's ~15 km candidate region.</li>
         <li><b>A single training run.</b> Sensitivity to the random seed is untested.</li>
-        <li><b>Mars is out of scope.</b> The same pipeline runs on MOLA elevation unchanged, but was
-          not run.</li>
+        <li><b>Mars was not run.</b> The method transfers directly (section 06), but no Mars results
+          are reported here.</li>
       </ol>
     </div>
   </div>
@@ -1272,12 +1310,12 @@ const RC = {0:"var(--r0)", 1:"var(--r1)", 2:"var(--r2)", 3:"var(--r3)"};
 const RN = {0:"R0", 1:"R1", 2:"R2", 3:"R3"};
 
 const ARTEMIS = [
-  ["de Gerlache Rim","88.5°S",28.9,8.7,"Atacama 4.7×, Death Valley 4.2×, Etna 3.7×"],
-  ["Nobile Rim","85.3°S",20.4,15.2,"Atacama 3.6×, Hawaii 3.3×, Hekla 3.1×"],
-  ["Malapert Massif","86.0°S",14.3,26.0,"Atacama 3.8×, Hekla 3.1×, Hawaii 2.9×"],
-  ["Peak near Shackleton","89.9°S",24.6,26.1,"Etna 5.5×, Haughton 3.2×, Atacama 3.1×"],
-  ["Faustini Rim A","87.2°S",15.0,33.0,"Hawaii 6.7×, Atacama 3.8×, Death Valley 2.7×"],
-  ["Haworth","86.9°S",8.9,40.1,"Atacama 3.5×, Hawaii 3.4×, Hekla 2.7×"],
+  ["de Gerlache Rim","Yes (Rim 2)","88.5°S",28.9,8.7,"Atacama 4.7×, Death Valley 4.2×, Etna 3.7×"],
+  ["Nobile Rim","Yes (Rims 1 and 2)","85.3°S",20.4,15.2,"Atacama 3.6×, Hawaii 3.3×, Hekla 3.1×"],
+  ["Malapert Massif","Yes","86.0°S",14.3,26.0,"Atacama 3.8×, Hekla 3.1×, Hawaii 2.9×"],
+  ["Peak near Shackleton","No — 2022 list only","89.9°S",24.6,26.1,"Etna 5.5×, Haughton 3.2×, Atacama 3.1×"],
+  ["Faustini Rim A","No — 2022 list only","87.2°S",15.0,33.0,"Hawaii 6.7×, Atacama 3.8×, Death Valley 2.7×"],
+  ["Haworth","Yes","86.9°S",8.9,40.1,"Atacama 3.5×, Hawaii 3.4×, Hekla 2.7×"],
 ];
 
 const SITES = [
@@ -1320,12 +1358,13 @@ $("#ramp").innerHTML = REGIMES.map(r => `
   </div>`).join("");
 
 /* artemis table */
-$("#artemis-rows").innerHTML = ARTEMIS.map(([n,lat,r2,cov,enr]) => `
+$("#artemis-rows").innerHTML = ARTEMIS.map(([n,list24,lat,r2,cov,enr]) => `
   <tr${cov < 10 ? ' class="hl"' : ""}>
     <td>${esc(n)}</td>
+    <td>${esc(list24)}</td>
     <td class="n">${lat}</td>
-    <td class="n">${r2}%</td>
-    <td class="n">${cov}%</td>
+    <td class="n">${r2.toFixed(1)}%</td>
+    <td class="n">${cov.toFixed(1)}%</td>
     <td class="bc">
       <div class="bar-track">
         <span class="bar" style="width:${cov/45*100}%;background:${cov<16?"var(--signal)":"var(--r3)"}"></span>

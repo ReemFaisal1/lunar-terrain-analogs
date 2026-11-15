@@ -130,9 +130,19 @@ training, but the model has seen terrain from the sites whose labels score the r
 
 ### 4. Artemis III candidate landing regions
 
-Six regions from NASA's candidate list, each approximated by the USGS/IAU gazetteer disk of the
-feature it is named after (the projection was checked against true pole distance to within
-0.1 km). The more R2 terrain a region contains, the less of it Earth supplies:
+**Why these six.** All six are among the 13 Artemis III candidate regions NASA named in 2022,
+selected for continuous sunlight through a 6.5-day surface stay, proximity to permanently shadowed
+regions, safe slopes, communication with Earth and launch-window availability. Four — Haworth,
+Malapert Massif, Nobile Rim and de Gerlache Rim — remain on NASA's nine-region shortlist of
+[October 2024](https://www.nasa.gov/news-release/nasa-provides-update-on-artemis-iii-moon-landing-regions/);
+Peak near Shackleton and Faustini Rim A appear only on the
+[2022 list](https://universetoday.com/157270/here-is-where-astronauts-might-land-on-the-moon).
+These six were used because each is named after a single crater or massif with published
+coordinates; regions named after plains or unnamed peaks were left out.
+
+Each is approximated by the USGS/IAU gazetteer disk of the feature it is named after (the
+projection was checked against true pole distance to within 0.1 km). The more R2 terrain a region
+contains, the less of it Earth supplies:
 
 | Region (approximated by) | Latitude | R2 share | Matched | Leading Earth sources (enrichment) |
 |---|---|---|---|---|
@@ -265,7 +275,12 @@ held out. The same split is used by every downstream analysis.
 11. **Regime spatial organisation** was not resolvable in a 12 km binned density map
     (`src/fig_polar.py`); crater-rim-scale structure would need finer binning.
 12. **A single training run.** Sensitivity to the random seed is untested.
-13. **Mars is out of scope.** The pipeline runs on MOLA elevation unchanged, but was not run.
+13. **Mars was not run.** The method transfers directly: swap LOLA for NASA's MOLA global
+    elevation (about 460 m per pixel) or HRSC/CTX stereo models, resample Earth to match, use
+    Mars's radius (3,389.5 km) and a latitude-appropriate sun angle in the shadow descriptor,
+    retrain, and calibrate the match threshold on held-out Martian terrain. No new model design
+    and no labels are needed. Haughton, the Atacama and the Dry Valleys — already in the Earth
+    pool — are established Mars analogs to test against.
 
 ## Reproducing
 
@@ -317,8 +332,7 @@ clustering and gradient-boosted models (scikit-learn), all trained from scratch 
 elevation data within this repository. No pretrained model, language model or external API is
 part of the scientific pipeline.
 
-Claude (Anthropic) was used as a coding and review assistant — for code scaffolding, debugging,
-and critique of the validation design. All scientific decisions and claims are the author's, and
+Claude (Anthropic) was used as a coding and review assistant — for code scaffolding, and debugging. All scientific decisions and claims are the author's, and
 every result reported here is produced by the scripts in `src/`.
 
 ## Author
