@@ -1,0 +1,7 @@
+region,feature,lat,lon,radius_km,x_km,y_km,n_patches,pole_km,R2_share_pct,covered_pct,median_d_over_T,top_earth,top_earth_enriched
+de Gerlache Rim,de Gerlache,-88.5,-87.1,16.2,-45.42937032785119,2.301352621421071,173,45.5,28.9,8.7,1.71,"atacama 35%, death_valley 18%, grand_canyon 12%","atacama 4.7x, death_valley 4.2x, etna 3.7x"
+Nobile Rim,Nobile,-85.28,53.27,39.65,114.77522670973491,85.64433871458434,853,143.2,20.4,15.2,1.5,"atacama 27%, death_valley 11%, grand_canyon 11%","atacama 3.6x, hawaii 3.3x, hekla 3.1x"
+Malapert Massif,Mons Malapert,-85.98,-1.67,33.5,-3.5539702955394454,121.89810265722112,624,121.9,14.3,26.0,1.29,"atacama 29%, grand_canyon 13%, death_valley 8%","atacama 3.8x, hekla 3.1x, hawaii 2.9x"
+Peak near Shackleton,Shackleton,-89.9,0.0,9.5,0.0,3.0323358121667248,69,3.0,24.6,26.1,1.49,"atacama 23%, grand_canyon 13%, etna 13%","etna 5.5x, haughton 3.2x, atacama 3.1x"
+Faustini Rim A,Faustini,-87.18,85.02,21.25,85.2062474186268,7.424611375813848,273,85.5,15.0,33.0,1.2,"atacama 28%, hawaii 12%, death_valley 11%","hawaii 6.7x, atacama 3.8x, death_valley 2.7x"
+Haworth,Haworth,-86.9,-4.0,25.7,-6.558875093970347,93.79628373833,384,94.0,8.9,40.1,1.11,"atacama 26%, grand_canyon 13%, death_valley 10%","atacama 3.5x, hawaii 3.4x, hekla 2.7x"

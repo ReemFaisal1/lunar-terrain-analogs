@@ -1,0 +1,1492 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Terrain Analogs — NASA Space Apps Challenge 2026</title>
+<meta name="description" content="Machine learning finds Earth terrain that matches the lunar south pole, and the lunar terrain it cannot match.">
+<meta property="og:title" content="Terrain Analogs — NASA Space Apps Challenge 2026">
+<meta property="og:description" content="Machine learning finds Earth terrain that matches the lunar south pole, and the lunar terrain it cannot match.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;1,8..60,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* 60% Dominant Lunar Obsidian Canvas */
+  --bg: #070A0F;
+  --bg-elev: #0D121B;
+  --bg-panel: #121824;
+  --bg-panel-hover: #172030;
+
+  /* Typography & Ink */
+  --ink: #F1F5F9;
+  --ink-2: #CBD5E1;
+  --ink-muted: #94A3B8;
+  --ink-dim: #64748B;
+
+  /* Structural Hairlines */
+  --rule: #1E293B;
+  --rule-strong: #334155;
+
+  /* 10% Telemetry Accents & Semantic Data Scales */
+  --cyan: #38BDF8;
+  --cyan-dim: rgba(56, 189, 248, 0.12);
+  --amber: #F59E0B;
+  --amber-dim: rgba(245, 158, 11, 0.12);
+
+  /* Regime scale — a sequential ramp ordered by relief, lowest to highest.
+     The regimes are a continuum, so the colour encodes one thing: where a
+     regime sits on that ramp. Coverage failure is flagged by --signal instead. */
+  --r1: #155E75; /* R1: gentle terrain, relief 156 m */
+  --r0: #0E7490; /* R0: moderate relief, 219 m */
+  --r3: #06B6D4; /* R3: basins and depressions, 280 m */
+  --r2: #67E8F9; /* R2: steep ridges and rims, 401 m */
+
+  /* Site role colours — all legible as bars on a near-black ground */
+  --role-analog: #22C55E;
+  --role-saudi: #FB923C;
+  --role-control: #94A3B8;
+  --role-bg: #475569;
+
+  --signal: #FB7185;
+  --signal-rust: #EA580C;
+
+  --sheet: min(1220px, 100% - 3rem);
+  --font-display: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-prose: "Source Serif 4", Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+*{box-sizing:border-box}
+html{
+  -webkit-text-size-adjust:100%;
+  scroll-behavior:smooth;
+  color-scheme:dark;
+}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink-2);
+  font-family:var(--font-prose);
+  font-size:17px;
+  line-height:1.68;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  overflow-x:hidden;
+}
+
+/* Subtle orbital polar coordinate backdrop in upper viewport only */
+.orbital-canvas{
+  position:relative;
+  background:
+    radial-gradient(ellipse 80% 55% at 50% -10%, rgba(56, 189, 248, 0.08), transparent 70%),
+    radial-gradient(circle at 85% 18%, rgba(245, 158, 11, 0.05), transparent 45%),
+    var(--bg);
+}
+.orbital-grid{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  overflow:hidden;
+  opacity:0.42;
+  mask-image:linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
+  -webkit-mask-image:linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
+}
+.orbital-grid svg{
+  width:100%;
+  height:100%;
+  display:block;
+}
+
+h1,h2,h3,.lbl,.num,table,.btn,figcaption,.topbar{
+  font-family:var(--font-display);
+}
+
+.sheet{width:var(--sheet); margin-inline:auto; position:relative}
+p{max-width:65ch; margin:0 0 1.1rem}
+p:last-child{margin-bottom:0}
+strong, b{color:var(--ink); font-weight:600}
+
+a{
+  color:var(--cyan);
+  text-decoration:underline;
+  text-decoration-color:rgba(56, 189, 248, 0.4);
+  text-decoration-thickness:1px;
+  text-underline-offset:3px;
+  transition:color .16s ease, text-decoration-color .16s ease;
+}
+a:hover{
+  color:var(--ink);
+  text-decoration-color:var(--ink);
+}
+a:focus-visible, button:focus-visible{
+  outline:2px solid var(--cyan);
+  outline-offset:2px;
+}
+
+/* ---------- 3-Zone Top Bar Contract ---------- */
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:40;
+  background:rgba(7, 10, 15, 0.86);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--rule);
+}
+.topbar-inner{
+  width:var(--sheet);
+  margin-inline:auto;
+  height:56px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:2rem;
+}
+.brand{
+  font-size:0.98rem;
+  font-weight:700;
+  letter-spacing:-0.01em;
+  color:var(--ink);
+  text-decoration:none;
+  white-space:nowrap;
+  flex-shrink:0;
+}
+.brand:hover{color:var(--cyan)}
+.topnav{
+  display:flex;
+  align-items:center;
+  gap:1.6rem;
+}
+.topnav a{
+  font-size:0.84rem;
+  font-weight:500;
+  color:var(--ink-muted);
+  text-decoration:none;
+  white-space:nowrap;
+  flex-shrink:0;
+  padding:0.25rem 0;
+  border-bottom:1px solid transparent;
+  transition:color .15s ease, border-color .15s ease;
+}
+.topnav a:hover{
+  color:var(--ink);
+  border-bottom-color:var(--cyan);
+}
+.top-cta{
+  font-family:var(--font-display);
+  font-size:0.82rem;
+  font-weight:600;
+  color:var(--bg);
+  background:var(--ink);
+  text-decoration:none;
+  padding:0.46rem 0.95rem;
+  border-radius:6px;
+  white-space:nowrap;
+  flex-shrink:0;
+  transition:background .15s ease, transform .15s ease;
+}
+.top-cta:hover{
+  background:var(--cyan);
+  color:var(--bg);
+}
+
+/* ---------- Masthead ---------- */
+.masthead{
+  padding:3.4rem 0 2rem;
+  border-bottom:1px solid var(--rule);
+}
+h1{
+  font-size:clamp(2.35rem, 5.2vw, 4.1rem);
+  line-height:1.03;
+  font-weight:700;
+  letter-spacing:-0.028em;
+  color:var(--ink);
+  margin:0 0 1rem;
+  max-width:18ch;
+  text-wrap:balance;
+}
+.standfirst{
+  font-family:var(--font-prose);
+  font-size:clamp(1.08rem, 1.8vw, 1.26rem);
+  line-height:1.56;
+  color:var(--ink-2);
+  max-width:60ch;
+  margin:0 0 1.8rem;
+}
+/* Zero-pill clean metadata strip */
+.meta{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:0.5rem 0.9rem;
+  font-family:var(--font-mono);
+  font-size:0.79rem;
+  color:var(--ink-muted);
+  padding-top:1.1rem;
+  border-top:1px solid var(--rule);
+}
+.meta span{display:inline-flex; align-items:baseline; gap:0.35rem}
+.meta span + span::before{
+  content:"·";
+  color:var(--ink-dim);
+  margin-right:0.55rem;
+}
+.meta b{
+  font-weight:600;
+  color:var(--ink);
+  font-variant-numeric:tabular-nums;
+}
+
+/* ---------- Hero Pair Comparison Stage ---------- */
+.hero{
+  padding:2.4rem 0 3.4rem;
+}
+.pair-stage{
+  background:var(--bg-elev);
+  border:1px solid var(--rule);
+  border-radius:10px;
+  padding:1.5rem;
+}
+.pair{
+  display:grid;
+  grid-template-columns:1fr 164px 1fr;
+  gap:1.5rem;
+  align-items:center;
+}
+.plate{margin:0}
+.plate-frame{
+  position:relative;
+  aspect-ratio:1;
+  width:100%;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(56, 189, 248, 0.05) 0%, transparent 72%),
+    linear-gradient(135deg, #0D131D 0%, #090D14 100%);
+  border:1px solid var(--rule-strong);
+  border-radius:6px;
+  overflow:hidden;
+}
+.plate-fallback{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:1.25rem;
+  text-align:center;
+  pointer-events:none;
+}
+.plate-fallback svg{
+  width:72%;
+  height:72%;
+  opacity:0.55;
+}
+.plate-scale{
+  position:absolute;
+  bottom:0.55rem;
+  left:0.65rem;
+  font-family:var(--font-mono);
+  font-size:0.68rem;
+  color:var(--ink-muted);
+  background:rgba(7, 10, 15, 0.78);
+  padding:0.15rem 0.42rem;
+  border-radius:3px;
+  border:1px solid rgba(51, 65, 85, 0.65);
+  pointer-events:none;
+  z-index:2;
+}
+.plate img{
+  position:relative;
+  z-index:1;
+  width:100%;
+  height:100%;
+  aspect-ratio:1;
+  display:block;
+  object-fit:cover;
+  opacity:0;
+  transition:opacity .22s ease, filter .2s ease;
+}
+.plate img.is-loaded{opacity:1}
+.plate figcaption{
+  font-size:0.86rem;
+  line-height:1.45;
+  margin-top:0.75rem;
+  color:var(--ink-muted);
+}
+.plate figcaption b{
+  display:block;
+  font-size:1rem;
+  font-weight:600;
+  color:var(--ink);
+  margin-bottom:0.15rem;
+}
+.plate figcaption span{
+  font-family:var(--font-mono);
+  font-size:0.78rem;
+  color:var(--ink-muted);
+}
+
+.join{
+  text-align:center;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:1.1rem 0.75rem;
+  background:var(--bg-panel);
+  border:1px solid var(--rule);
+  border-radius:8px;
+}
+.join .d{
+  font-family:var(--font-mono);
+  font-size:2rem;
+  font-weight:600;
+  line-height:1.1;
+  color:var(--cyan);
+  font-variant-numeric:tabular-nums;
+  display:block;
+}
+.join-bar{
+  width:100%;
+  height:3px;
+  background:var(--rule-strong);
+  border-radius:2px;
+  margin:0.6rem 0;
+  position:relative;
+  overflow:hidden;
+}
+.join-bar-fill{
+  position:absolute;
+  left:0;
+  top:0;
+  bottom:0;
+  width:0;
+  background:var(--cyan);
+}
+.join .t{
+  font-family:var(--font-display);
+  font-size:0.74rem;
+  line-height:1.38;
+  color:var(--ink-muted);
+  display:block;
+}
+.hero-note{
+  margin:1.35rem 0 0;
+  padding-top:1.2rem;
+  border-top:1px solid var(--rule);
+  font-size:1rem;
+  line-height:1.62;
+  color:var(--ink-2);
+  max-width:68ch;
+}
+
+/* ---------- Section Scaffolding: Marginal Index + Content ---------- */
+section{
+  border-top:1px solid var(--rule);
+  padding:3.6rem 0;
+  scroll-margin-top:64px;
+}
+.row{
+  display:grid;
+  grid-template-columns:200px 1fr;
+  gap:2.8rem;
+  align-items:start;
+}
+.lbl{
+  font-size:0.86rem;
+  font-weight:600;
+  color:var(--ink);
+  line-height:1.35;
+  position:sticky;
+  top:5rem;
+  margin:0;
+}
+.lbl .sec-num{
+  display:block;
+  font-family:var(--font-mono);
+  font-size:0.74rem;
+  font-weight:500;
+  color:var(--cyan);
+  margin-bottom:0.35rem;
+  font-variant-numeric:tabular-nums;
+}
+.lbl span:not(.sec-num){
+  display:block;
+  font-weight:400;
+  font-size:0.8rem;
+  color:var(--ink-muted);
+  margin-top:0.28rem;
+  line-height:1.4;
+}
+h2{
+  font-size:clamp(1.48rem, 2.8vw, 2.05rem);
+  font-weight:700;
+  line-height:1.18;
+  letter-spacing:-0.018em;
+  color:var(--ink);
+  margin:0 0 0.9rem;
+  max-width:34ch;
+  text-wrap:balance;
+}
+h3{
+  font-size:1.12rem;
+  font-weight:600;
+  color:var(--ink);
+  margin:2.2rem 0 0.55rem;
+  letter-spacing:-0.01em;
+}
+.lede{
+  font-size:1.14rem;
+  line-height:1.62;
+  color:var(--ink);
+  max-width:62ch;
+}
+
+/* ---------- Regime Ramp ---------- */
+.ramp{
+  display:grid;
+  grid-template-columns:repeat(4, 1fr);
+  gap:0.75rem;
+  margin:1.5rem 0 1.6rem;
+}
+.ramp-card{
+  background:var(--bg-elev);
+  border:1px solid var(--rule);
+  border-radius:8px;
+  padding:1rem 1rem 1.05rem;
+  position:relative;
+  overflow:hidden;
+  transition:border-color .16s ease, background-color .16s ease;
+}
+.ramp-card:hover{
+  background:var(--bg-panel);
+  border-color:var(--rule-strong);
+}
+.ramp-bar-top{
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:3px;
+}
+.ramp-head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:0.5rem;
+  margin-bottom:0.25rem;
+}
+.ramp-card .k{
+  font-family:var(--font-mono);
+  font-weight:600;
+  font-size:1.15rem;
+  color:var(--ink);
+}
+.ramp-share{
+  font-family:var(--font-mono);
+  font-size:0.75rem;
+  color:var(--ink-muted);
+  font-variant-numeric:tabular-nums;
+}
+.ramp-name{
+  font-family:var(--font-display);
+  font-size:0.88rem;
+  font-weight:500;
+  color:var(--ink-2);
+  margin-bottom:0.75rem;
+}
+.ramp-metrics{
+  font-family:var(--font-mono);
+  font-size:0.75rem;
+  line-height:1.55;
+  color:var(--ink-muted);
+  font-variant-numeric:tabular-nums;
+  border-top:1px solid var(--rule);
+  padding-top:0.6rem;
+}
+.ramp-cov-row{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  margin-top:0.45rem;
+}
+.ramp-cov-val{
+  font-size:0.95rem;
+  font-weight:600;
+  color:var(--ink);
+}
+.ramp-meter{
+  height:4px;
+  background:var(--bg-panel);
+  border-radius:2px;
+  overflow:hidden;
+  margin-top:0.35rem;
+}
+.ramp-meter-fill{
+  height:100%;
+  border-radius:2px;
+}
+
+/* ---------- Gallery Filters & Pair Cards ---------- */
+.filters{
+  display:flex;
+  flex-wrap:wrap;
+  gap:0.45rem;
+  margin:1.3rem 0 1.5rem;
+}
+.btn{
+  font-size:0.83rem;
+  font-weight:500;
+  min-height:40px;
+  padding:0.45rem 0.95rem;
+  background:var(--bg-elev);
+  border:1px solid var(--rule);
+  color:var(--ink-muted);
+  cursor:pointer;
+  border-radius:6px;
+  white-space:nowrap;
+  flex-shrink:0;
+  transition:background-color .16s ease, border-color .16s ease, color .16s ease;
+}
+.btn:hover{
+  border-color:var(--rule-strong);
+  color:var(--ink);
+  background:var(--bg-panel);
+}
+.btn[aria-pressed="true"]{
+  background:var(--ink);
+  border-color:var(--ink);
+  color:var(--bg);
+  font-weight:600;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(256px, 1fr));
+  gap:1.25rem;
+}
+.card{
+  background:var(--bg-elev);
+  border:1px solid var(--rule);
+  border-radius:8px;
+  padding:0.85rem;
+  transition:border-color .18s ease, background-color .18s ease, transform .18s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor:pointer;
+}
+.card:hover{
+  border-color:var(--rule-strong);
+  background:var(--bg-panel);
+  transform:translateY(-2px);
+}
+.card figure{
+  margin:0;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:4px;
+}
+.card-img-wrap{
+  position:relative;
+  aspect-ratio:1;
+  background:#090D14;
+  border:1px solid var(--rule-strong);
+  border-radius:4px;
+  overflow:hidden;
+}
+.card-img-tag{
+  position:absolute;
+  top:4px;
+  left:4px;
+  font-family:var(--font-mono);
+  font-size:0.62rem;
+  color:var(--ink-2);
+  background:rgba(7, 10, 15, 0.78);
+  padding:1px 4px;
+  border-radius:2px;
+  z-index:2;
+  pointer-events:none;
+}
+.card img{
+  width:100%;
+  height:100%;
+  aspect-ratio:1;
+  display:block;
+  object-fit:cover;
+  transition:filter .18s ease, opacity .18s ease;
+}
+.card:hover img{filter:contrast(1.06) brightness(1.04)}
+.card .cap{
+  font-family:var(--font-display);
+  font-size:0.82rem;
+  line-height:1.48;
+  margin:0.75rem 0 0;
+  color:var(--ink-muted);
+}
+.card .cap b{
+  display:block;
+  font-size:0.92rem;
+  color:var(--ink);
+  font-weight:600;
+  margin-bottom:0.2rem;
+}
+.card .cap .note{
+  display:block;
+  font-family:var(--font-mono);
+  font-size:0.72rem;
+  color:var(--ink-dim);
+  margin-bottom:0.35rem;
+}
+.swatch{
+  display:inline-block;
+  width:0.58rem;
+  height:0.58rem;
+  border-radius:2px;
+  vertical-align:middle;
+  margin-right:0.38rem;
+  transform:translateY(-1px);
+}
+.pair-dist{
+  display:block;
+  margin-top:0.25rem;
+  font-family:var(--font-mono);
+  font-size:0.75rem;
+  font-variant-numeric:tabular-nums;
+  color:var(--cyan);
+}
+.pair-dist.unmatched{
+  color:var(--r2);
+}
+
+#status{
+  margin-top:1.25rem;
+  font-family:var(--font-mono);
+  font-size:0.82rem;
+  color:var(--ink-muted);
+  background:var(--bg-elev);
+  border:1px solid var(--rule);
+  border-radius:6px;
+  padding:0.75rem 1rem;
+  max-width:74ch;
+}
+#status:empty{display:none}
+#status code{
+  background:var(--bg-panel);
+  color:var(--cyan);
+  padding:0.12rem 0.38rem;
+  border-radius:4px;
+  border:1px solid var(--rule-strong);
+  font-family:var(--font-mono);
+  font-size:0.85em;
+}
+
+/* ---------- Data Tables ---------- */
+.table-wrap{
+  margin:1.25rem 0 1.4rem;
+  background:var(--bg-elev);
+  border:1px solid var(--rule);
+  border-radius:8px;
+  overflow-x:auto;
+  padding:0.25rem 1rem 0.9rem;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:0.88rem;
+}
+th{
+  text-align:left;
+  font-weight:600;
+  font-size:0.76rem;
+  color:var(--ink-muted);
+  border-bottom:1px solid var(--rule-strong);
+  padding:0.85rem 0.75rem 0.65rem 0;
+  vertical-align:bottom;
+  white-space:nowrap;
+}
+td{
+  padding:0.62rem 0.75rem 0.62rem 0;
+  border-bottom:1px solid var(--rule);
+  vertical-align:baseline;
+  color:var(--ink-2);
+}
+tbody tr:last-child td{border-bottom:none}
+tbody tr{transition:background-color .14s ease}
+tbody tr:hover td{background:rgba(255, 255, 255, 0.02)}
+td:first-child{color:var(--ink); font-weight:500}
+th.n, td.n{
+  text-align:right;
+  font-family:var(--font-mono);
+  font-variant-numeric:tabular-nums;
+  padding-right:0.85rem;
+  white-space:nowrap;
+}
+caption{
+  caption-side:bottom;
+  text-align:left;
+  font-size:0.8rem;
+  line-height:1.5;
+  color:var(--ink-muted);
+  padding-top:0.85rem;
+  border-top:1px solid var(--rule);
+  margin-top:0.25rem;
+  font-family:var(--font-prose);
+}
+tr.hl td{
+  background:rgba(244, 63, 94, 0.09);
+}
+tr.hl:hover td{
+  background:rgba(244, 63, 94, 0.14);
+}
+tr.hl td:first-child{
+  color:#FDA4AF;
+}
+
+/* Table bars */
+.bar-track{
+  width:100%;
+  height:7px;
+  background:var(--bg-panel);
+  border-radius:3px;
+  overflow:hidden;
+}
+.bar{
+  display:block;
+  height:100%;
+  background:var(--r0);
+  min-width:2px;
+  border-radius:3px;
+}
+.bar.sa{background:var(--role-saudi)}
+.bar.ct{background:var(--role-control)}
+td.bc{width:28%; min-width:120px; padding-right:1rem; vertical-align:middle}
+
+/* Role indicator text in Earth sites table */
+.role-label{
+  font-family:var(--font-mono);
+  font-size:0.78rem;
+  color:var(--ink-muted);
+  white-space:nowrap;
+}
+.role-analog{color:var(--role-analog)}
+.role-saudi{color:var(--role-saudi)}
+.role-control{color:var(--role-control)}
+
+/* Legend bar above Earth sites table */
+.site-toolbar{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:space-between;
+  gap:0.85rem 1.2rem;
+  margin-top:1.25rem;
+}
+.site-filters{
+  display:flex;
+  flex-wrap:wrap;
+  gap:0.4rem;
+}
+.site-filters .btn{
+  min-height:36px;
+  padding:0.35rem 0.78rem;
+  font-size:0.79rem;
+}
+
+/* Validation table formatting */
+.val-table td:first-child{
+  width:24%;
+  color:var(--ink);
+  font-weight:600;
+}
+.val-table td:nth-child(2){
+  width:32%;
+  color:var(--ink-muted);
+}
+.val-table td:nth-child(3){
+  font-family:var(--font-prose);
+  color:var(--ink-2);
+}
+
+/* ---------- Scope & Limits ---------- */
+ol.limits{
+  max-width:70ch;
+  padding-left:0;
+  list-style:none;
+  counter-reset:limit-counter;
+  margin:1.2rem 0 0;
+  border-top:1px solid var(--rule);
+}
+ol.limits li{
+  counter-increment:limit-counter;
+  position:relative;
+  padding:0.95rem 0 0.95rem 3.2rem;
+  border-bottom:1px solid var(--rule);
+  margin:0;
+}
+ol.limits li::before{
+  content:"0" counter(limit-counter);
+  position:absolute;
+  left:0;
+  top:1.12rem;
+  font-family:var(--font-mono);
+  font-size:0.8rem;
+  font-weight:600;
+  color:var(--cyan);
+  font-variant-numeric:tabular-nums;
+}
+
+/* ---------- Pair Inspector Dialog ---------- */
+.modal-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:80;
+  background:rgba(4, 6, 10, 0.84);
+  backdrop-filter:blur(6px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:1.5rem;
+}
+.modal-backdrop[open]{display:flex}
+.modal-card{
+  width:min(860px, 100%);
+  background:var(--bg-elev);
+  border:1px solid var(--rule-strong);
+  border-radius:10px;
+  padding:1.5rem;
+  color:var(--ink-2);
+}
+.modal-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:1rem;
+  padding-bottom:1rem;
+  border-bottom:1px solid var(--rule);
+  margin-bottom:1.25rem;
+}
+.modal-title{
+  font-family:var(--font-display);
+  font-size:1.25rem;
+  font-weight:700;
+  color:var(--ink);
+  margin:0;
+}
+.modal-sub{
+  font-family:var(--font-mono);
+  font-size:0.8rem;
+  color:var(--ink-muted);
+  margin-top:0.25rem;
+}
+.modal-close{
+  min-height:40px;
+  padding:0.4rem 0.85rem;
+  font-family:var(--font-display);
+  font-size:0.82rem;
+  font-weight:600;
+  color:var(--ink);
+  background:var(--bg-panel);
+  border:1px solid var(--rule-strong);
+  border-radius:6px;
+  cursor:pointer;
+}
+.modal-close:hover{
+  background:var(--ink);
+  color:var(--bg);
+}
+.modal-imgs{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:1rem;
+}
+.modal-pane img{
+  width:100%;
+  aspect-ratio:1;
+  display:block;
+  border:1px solid var(--rule-strong);
+  border-radius:6px;
+  background:#090D14;
+}
+.modal-pane-cap{
+  font-family:var(--font-mono);
+  font-size:0.78rem;
+  color:var(--ink-muted);
+  margin-top:0.55rem;
+}
+.modal-pane-cap b{
+  display:block;
+  font-family:var(--font-display);
+  font-size:0.92rem;
+  color:var(--ink);
+  margin-bottom:0.1rem;
+}
+
+/* ---------- Footer ---------- */
+.foot{
+  border-top:1px solid var(--rule-strong);
+  background:var(--bg-elev);
+  padding:2.6rem 0 3.4rem;
+  font-size:0.9rem;
+  color:var(--ink-muted);
+}
+.foot-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:2.5rem;
+}
+.foot p{max-width:60ch; line-height:1.65}
+.foot b{color:var(--ink)}
+
+/* ---------- Responsive ---------- */
+@media (max-width:980px){
+  .ramp{grid-template-columns:repeat(2, 1fr)}
+  .pair{grid-template-columns:1fr 128px 1fr; gap:1rem}
+}
+@media (max-width:780px){
+  :root{--sheet:min(1220px, 100% - 2rem)}
+  body{font-size:16px}
+  .topnav{display:none}
+  .masthead{padding:2.2rem 0 1.5rem}
+  .row{grid-template-columns:1fr; gap:1rem}
+  .lbl{
+    position:static;
+    border-bottom:1px solid var(--rule);
+    padding-bottom:0.65rem;
+  }
+  .lbl span:not(.sec-num){display:inline; margin-left:0.5rem}
+  .pair{grid-template-columns:1fr; gap:1rem}
+  .join{
+    flex-direction:row;
+    justify-content:space-between;
+    text-align:left;
+    padding:0.85rem 1rem;
+    gap:1rem;
+  }
+  .join-bar{display:none}
+  .ramp{grid-template-columns:1fr}
+  .foot-grid{grid-template-columns:1fr; gap:1.5rem}
+  td.bc{display:none}
+  .modal-imgs{grid-template-columns:1fr}
+}
+
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .card, .card img, .plate img, .btn, .top-cta{transition:none}
+  .card:hover{transform:none}
+}
+</style>
+</head>
+<body>
+
+<nav class="topbar" aria-label="Primary navigation">
+  <div class="topbar-inner">
+    <a href="#" class="brand">Terrain Analogs</a>
+    <div class="topnav">
+      <a href="#finding">Finding</a>
+      <a href="#pairs">Matched Pairs</a>
+      <a href="#artemis">Artemis III</a>
+      <a href="#sites">Earth Sites</a>
+      <a href="#validation">Validation</a>
+    </div>
+    <a href="#pairs" class="top-cta">Explore Pairs</a>
+  </div>
+</nav>
+
+<div class="orbital-canvas">
+  <div class="orbital-grid" aria-hidden="true">
+    <svg viewBox="0 0 1440 720" preserveAspectRatio="xMidYMin slice" fill="none">
+      <circle cx="1180" cy="140" r="180" stroke="#38BDF8" stroke-opacity="0.14" stroke-dasharray="3 6"/>
+      <circle cx="1180" cy="140" r="320" stroke="#38BDF8" stroke-opacity="0.1" stroke-dasharray="2 8"/>
+      <circle cx="1180" cy="140" r="460" stroke="#94A3B8" stroke-opacity="0.08"/>
+      <circle cx="1180" cy="140" r="620" stroke="#94A3B8" stroke-opacity="0.06"/>
+      <line x1="1180" y1="-40" x2="1180" y2="720" stroke="#38BDF8" stroke-opacity="0.08"/>
+      <line x1="480" y1="140" x2="1440" y2="140" stroke="#38BDF8" stroke-opacity="0.08"/>
+    </svg>
+  </div>
+
+  <header class="masthead">
+    <div class="sheet">
+      <h1>The Moon has terrain Earth cannot rehearse</h1>
+      <p class="standfirst">A convolutional autoencoder was given nothing but elevation — no labels, no
+        geology, not even which planet each sample came from. It learned to match terrain across
+        two worlds, and to show where the matching fails.</p>
+      <div class="meta">
+        <span><b>121,914</b> terrain patches</span>
+        <span><b>55,696</b> lunar, 80–90°S</span>
+        <span><b>27</b> Earth sites</span>
+        <span><b>80 m</b> common grid</span>
+        <span>NASA Space Apps Challenge 2026</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="hero sheet">
+    <div class="pair-stage">
+      <div class="pair" id="hero-pair">
+        <figure class="plate">
+          <div class="plate-frame">
+            <div class="plate-fallback" aria-hidden="true">
+              <svg viewBox="0 0 120 120" fill="none">
+                <rect x="8" y="8" width="104" height="104" stroke="#334155" stroke-width="0.8" stroke-dasharray="2 3"/>
+                <circle cx="60" cy="60" r="36" stroke="#38BDF8" stroke-opacity="0.45" stroke-width="0.9"/>
+                <circle cx="60" cy="60" r="22" stroke="#38BDF8" stroke-opacity="0.35" stroke-width="0.8"/>
+                <circle cx="60" cy="60" r="9" stroke="#94A3B8" stroke-opacity="0.4" stroke-width="0.8"/>
+                <line x1="60" y1="16" x2="60" y2="104" stroke="#334155" stroke-width="0.7"/>
+                <line x1="16" y1="60" x2="104" y2="60" stroke="#334155" stroke-width="0.7"/>
+              </svg>
+            </div>
+            <img id="hero-moon" alt="Hillshaded lunar terrain patch, about 5 km across">
+            <span class="plate-scale">5.12 km · 80 m/px</span>
+          </div>
+          <figcaption><b>Lunar south pole</b><span id="hero-moon-sub">loading</span></figcaption>
+        </figure>
+
+        <div class="join">
+          <span class="d" id="hero-d">—</span>
+          <div class="join-bar" aria-hidden="true"><div class="join-bar-fill" id="hero-bar"></div></div>
+          <span class="t" id="hero-t">distance between them, as a fraction of the match threshold</span>
+        </div>
+
+        <figure class="plate">
+          <div class="plate-frame">
+            <div class="plate-fallback" aria-hidden="true">
+              <svg viewBox="0 0 120 120" fill="none">
+                <rect x="8" y="8" width="104" height="104" stroke="#334155" stroke-width="0.8" stroke-dasharray="2 3"/>
+                <path d="M18 82 C36 68, 48 44, 64 52 C80 60, 88 34, 102 38" stroke="#2DD4BF" stroke-opacity="0.45" stroke-width="1"/>
+                <path d="M18 94 C40 82, 52 58, 68 64 C84 70, 92 48, 102 52" stroke="#2DD4BF" stroke-opacity="0.3" stroke-width="0.9"/>
+                <line x1="60" y1="16" x2="60" y2="104" stroke="#334155" stroke-width="0.7"/>
+                <line x1="16" y1="60" x2="104" y2="60" stroke="#334155" stroke-width="0.7"/>
+              </svg>
+            </div>
+            <img id="hero-earth" alt="Hillshaded terrestrial terrain patch at the same scale">
+            <span class="plate-scale">5.12 km · 80 m/px</span>
+          </div>
+          <figcaption><b id="hero-earth-name">Earth</b><span id="hero-earth-sub">loading</span></figcaption>
+        </figure>
+      </div>
+      <p class="hero-note">Both squares are 5.12 km across, shaded by the same low sun. One is on the Moon.
+        The model placed them beside each other because their shapes are as close as two pieces of lunar
+        terrain from opposite sides of the pole.</p>
+    </div>
+  </div>
+</div>
+
+<section id="finding">
+  <div class="sheet row">
+    <p class="lbl"><span class="sec-num">01</span>The finding<span>what the matching reveals</span></p>
+    <div>
+      <h2>Three quarters of the lunar south pole has no good terrestrial match in this sample</h2>
+      <p class="lede">Matching every lunar patch against 66,218 terrestrial ones, 27.3% find an Earth
+        counterpart as close as lunar terrain is to other lunar terrain. The shortfall is not spread
+        evenly. It concentrates in one kind of landscape.</p>
+      <div class="ramp" id="ramp"></div>
+      <p>The four regimes emerged from clustering the learned representation, with no human
+        labelling. Their physical properties were measured afterwards, from descriptors the model
+        never saw, and they line up: relief and slope rise steadily across the ramp. Separation is
+        weak by design — these are four stable positions along a continuum, not discrete types.</p>
+      <p><b>R2 is the problem.</b> Steep, high-relief ridge and rim terrain makes up an eighth of the
+        lunar south pole and finds a match in 0.5% of cases. The Earth sites rugged enough to
+        qualify — the Alps, the Himalaya — are rugged in the wrong way, carved by ice rather than
+        built by impact.</p>
+    </div>
+  </div>
+</section>
+
+<section id="pairs">
+  <div class="sheet row">
+    <p class="lbl"><span class="sec-num">02</span>Matched pairs<span>Moon left, Earth right</span></p>
+    <div>
+      <h2>What the model considers the same terrain</h2>
+      <p>Each pair shows a lunar patch and the terrestrial patch nearest to it in the learned
+        64-dimensional space. Distances are given as a ratio to the match threshold, so below 1.00
+        is a good match. A close pair means those two shapes are alike; a site's rank in the table
+        below depends on something different — how much of the Moon's variety it covers. Flat sand
+        matches flat lunar terrain closely, and almost nothing else.</p>
+      <div class="filters" id="filters"></div>
+      <div class="grid" id="grid"></div>
+      <p id="status"></p>
+    </div>
+  </div>
+</section>
+
+<section id="artemis">
+  <div class="sheet row">
+    <p class="lbl"><span class="sec-num">03</span>Artemis III<span>candidate landing regions</span></p>
+    <div>
+      <h2>The regions NASA is most interested in are the hardest to rehearse</h2>
+      <p>Six candidate landing regions were projected onto the lunar grid using feature centres from
+        the USGS/IAU gazetteer. The pattern across them follows the regime result: the more R2
+        terrain a region contains, the less of it Earth can supply.</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Enrichment divides a site's share of matches by its share of the Earth sample, so it
+            separates genuine similarity from sample size. With six regions this is a visible pattern,
+            not a statistically established correlation.</caption>
+          <thead><tr><th>Region</th><th class="n">Latitude</th><th class="n">R2 share</th><th class="n">Matched</th><th class="bc"></th><th>Earth terrain supplying the matches</th></tr></thead>
+          <tbody id="artemis-rows"></tbody>
+        </table>
+      </div>
+      <p>Atacama leads everywhere at three to five times its share of the sample, which is a result
+        in itself: the method independently recovers the most heavily used terrestrial analog
+        without being told that it is one. At Faustini, Hawaii reaches 6.7×.</p>
+    </div>
+  </div>
+</section>
+
+<section id="sites">
+  <div class="sheet row">
+    <p class="lbl"><span class="sec-num">04</span>Earth sites<span>ranked by lunar coverage</span></p>
+    <div>
+      <h2>Which landscapes carry the most lunar terrain</h2>
+      <p>The score counts distinct lunar patches a site covers, per thousand of its own patches. It
+        has to run in this direction: a uniform plain easily finds a lunar neighbour for each of its
+        own patches, while covering almost none of the Moon's variety. Scored the other way round,
+        the flat control site came first.</p>
+      <div class="site-toolbar">
+        <div class="site-filters" id="site-filters"></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Site</th><th>Role</th><th class="n">Per 1,000</th><th class="bc"></th></tr></thead>
+          <tbody id="site-rows"></tbody>
+          <caption>Established analog sites are shown in green, Saudi sites in orange, controls in
+            light grey. Four of the seven established analogs rank in the top nine.</caption>
+        </table>
+      </div>
+      <h3>Saudi Arabia</h3>
+      <p>The escarpments carry lunar terrain; the sand seas do not. Tuwayq ranks eighth of 27,
+        between Death Valley and Askja, and Asir ranks thirteenth — both above either control. Rub'
+        al Khali and Wahbah fall below the flat control, which is the honest answer rather than a
+        flattering one. An earlier version of this analysis scored Rub' al Khali at 100% and was
+        wrong for a measurable reason.</p>
+    </div>
+  </div>
+</section>
+
+<section id="validation">
+  <div class="sheet row">
+    <p class="lbl"><span class="sec-num">05</span>Validation<span>testing the method against itself</span></p>
+    <div>
+      <h2>Does the representation know anything slope does not?</h2>
+      <p>Every claim here was tested against a simpler explanation. Physical descriptors were
+        computed independently and never shown to the model, so they can be used to interrogate what
+        it learned. Validation regions were held out spatially.</p>
+      <div class="table-wrap">
+        <table class="val-table">
+          <thead><tr><th>Question</th><th>Test</th><th>Result</th></tr></thead>
+          <tbody>
+            <tr><td>Beyond steepness?</td><td>predicting terrain enclosure on held-out regions</td><td>lunar R² 0.07 from slope and relief alone, 0.33 adding the embedding; gain +0.198, 95% CI +0.064 to +0.338</td></tr>
+            <tr><td>Better than simple features?</td><td>ranking analog sites above controls</td><td>AUC 0.786 against 0.643, permutation p = 0.022</td></tr>
+            <tr><td>Just site size?</td><td>ranking adjusted for patch count</td><td>AUC 0.72, p = 0.031; the largest analog still ranks third</td></tr>
+            <tr><td>Did it just learn which planet?</td><td>Moon-vs-Earth classifier</td><td>0.952 from the embedding, but <b>0.981</b> from five plain slope statistics — the gap is real terrain difference</td></tr>
+            <tr><td>Does the threshold decide it?</td><td>±20% on the match threshold</td><td>ranking stable, Spearman 0.94 to 0.98</td></tr>
+            <tr><td>Where does it add nothing?</td><td>predicting traversal cost</td><td>slope alone wins, 0.830 against 0.841 — reported rather than hidden</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="limits">
+  <div class="sheet row">
+    <p class="lbl"><span class="sec-num">06</span>Limits<span>what this does not establish</span></p>
+    <div>
+      <h2>Scope</h2>
+      <ol class="limits">
+        <li><b>Topography only.</b> No geology, composition, regolith mechanics, thermal environment
+          or volatiles. Two landscapes can match in shape and differ in everything that matters for
+          a mission.</li>
+        <li><b>Terrain enclosure is not a permanently shadowed region.</b> It measures occlusion in
+          all 16 simulated azimuths under a 1.5° sun, and says nothing about water ice.</li>
+        <li><b>Traversal cost is a slope proxy</b>, not a validated rover mobility model.</li>
+        <li><b>27 hand-picked Earth sites.</b> The absence of a match for R2 describes this sample.
+          Intermediate-relief terrain may exist and simply not be sampled here.</li>
+        <li><b>Seven known analogs</b> carry the enrichment test, and several background sites are
+          arguably analogs themselves, which makes the contrast conservative.</li>
+        <li><b>The match threshold is model-relative</b>, calibrated on held-out lunar terrain rather
+          than against an established scientific criterion.</li>
+        <li><b>A single training run.</b> Sensitivity to the random seed is untested.</li>
+        <li><b>Mars is out of scope.</b> The same pipeline runs on MOLA elevation unchanged, but was
+          not run.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<footer class="foot">
+  <div class="sheet foot-grid">
+    <p><b>Data.</b> LOLA LDEM 80S at 80 m/px (Barker et al. 2023, <i>PSJ</i> 4:183);
+      ASTER GDEM v3 and NASADEM, NASA LP DAAC; feature coordinates from the USGS/IAU Gazetteer of
+      Planetary Nomenclature.</p>
+    <p><b>Method.</b> Convolutional autoencoder to a 64-dimensional embedding, trained from scratch
+      on balanced lunar and terrestrial batches with dihedral augmentation; k-means regimes;
+      nearest-neighbour matching. No pretrained model and no language model is part of the pipeline.
+      Code and full method: <a href="https://github.com/" id="repo-link">project repository</a>.</p>
+  </div>
+</footer>
+
+<div class="modal-backdrop" id="pair-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div>
+        <h3 class="modal-title" id="modal-title">Pair Comparison</h3>
+        <div class="modal-sub" id="modal-sub"></div>
+      </div>
+      <button type="button" class="modal-close" id="modal-close">Close</button>
+    </div>
+    <div class="modal-imgs">
+      <div class="modal-pane">
+        <img id="modal-moon-img" alt="Lunar terrain hillshade">
+        <div class="modal-pane-cap"><b>Lunar south pole</b><span id="modal-moon-cap"></span></div>
+      </div>
+      <div class="modal-pane">
+        <img id="modal-earth-img" alt="Terrestrial terrain hillshade">
+        <div class="modal-pane-cap"><b id="modal-earth-title">Earth</b><span id="modal-earth-cap"></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const REGIMES = [
+  {k:"R1", name:"gentle terrain",        n:"46%", relief:156, slope:4.1, cov:46.7, c:"var(--r1)"},
+  {k:"R0", name:"moderate relief",       n:"28%", relief:219, slope:5.4, cov:17.3, c:"var(--r0)"},
+  {k:"R3", name:"basins and depressions",n:"14%", relief:280, slope:6.6, cov:7.5,  c:"var(--r3)"},
+  {k:"R2", name:"steep ridges and rims", n:"12%", relief:401, slope:8.6, cov:0.5,  c:"var(--r2)"},
+];
+const RC = {0:"var(--r0)", 1:"var(--r1)", 2:"var(--r2)", 3:"var(--r3)"};
+const RN = {0:"R0", 1:"R1", 2:"R2", 3:"R3"};
+
+const ARTEMIS = [
+  ["de Gerlache Rim","88.5°S",28.9,8.7,"Atacama 4.7×, Death Valley 4.2×, Etna 3.7×"],
+  ["Nobile Rim","85.3°S",20.4,15.2,"Atacama 3.6×, Hawaii 3.3×, Hekla 3.1×"],
+  ["Malapert Massif","86.0°S",14.3,26.0,"Atacama 3.8×, Hekla 3.1×, Hawaii 2.9×"],
+  ["Peak near Shackleton","89.9°S",24.6,26.1,"Etna 5.5×, Haughton 3.2×, Atacama 3.1×"],
+  ["Faustini Rim A","87.2°S",15.0,33.0,"Hawaii 6.7×, Atacama 3.8×, Death Valley 2.7×"],
+  ["Haworth","86.9°S",8.9,40.1,"Atacama 3.5×, Hawaii 3.4×, Hekla 2.7×"],
+];
+
+const SITES = [
+  ["Hawaii","analog",2400],["Haughton Crater","analog",1884],["Hekla","background",1750],
+  ["Atacama","analog",1591],["Tibesti","background",1333],["Mount Etna","background",1329],
+  ["Death Valley","analog",1160],["Tuwayq Escarpment","saudi",1069],["Askja","analog",1011],
+  ["Grand Canyon","background",967],["Ahaggar","background",953],["Namib","background",876],
+  ["Asir Mountains","saudi",684],["Gobi","background",638],["Dry Valleys","analog",503],
+  ["Craters of the Moon","analog",495],["Sinai","background",463],["Harrat Rahat","saudi",451],
+  ["Great Smoky Mountains","control",442],["Harrat Khaybar","saudi",417],["Andes","background",309],
+  ["Svalbard","background",263],["Great Plains","control",184],["Himalaya","background",115],
+  ["Rub' al Khali","saudi",84],["Wahbah Crater","saudi",77],["Alps","background",24],
+];
+const ROLE = {analog:"established analog", saudi:"Saudi Arabia", control:"control", background:"background"};
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* regime ramp */
+$("#ramp").innerHTML = REGIMES.map(r => `
+  <div class="ramp-card">
+    <div class="ramp-bar-top" style="background:${r.c}"></div>
+    <div class="ramp-head">
+      <span class="k">${r.k}</span>
+      <span class="ramp-share">${r.n} of pole</span>
+    </div>
+    <div class="ramp-name">${esc(r.name)}</div>
+    <div class="ramp-metrics">
+      <div>relief ${r.relief} m · slope ${r.slope}°</div>
+      <div class="ramp-cov-row">
+        <span>matched on Earth</span>
+        <span class="ramp-cov-val"${r.cov < 10 ? ' style="color:var(--signal)"' : ""}>${r.cov}%</span>
+      </div>
+      <div class="ramp-meter" aria-hidden="true">
+        <div class="ramp-meter-fill" style="width:${Math.max(r.cov, 2)}%;background:${r.cov < 10 ? "var(--signal)" : r.c}"></div>
+      </div>
+    </div>
+  </div>`).join("");
+
+/* artemis table */
+$("#artemis-rows").innerHTML = ARTEMIS.map(([n,lat,r2,cov,enr]) => `
+  <tr${cov < 10 ? ' class="hl"' : ""}>
+    <td>${esc(n)}</td>
+    <td class="n">${lat}</td>
+    <td class="n">${r2}%</td>
+    <td class="n">${cov}%</td>
+    <td class="bc">
+      <div class="bar-track">
+        <span class="bar" style="width:${cov/45*100}%;background:${cov<16?"var(--r2)":"var(--r0)"}"></span>
+      </div>
+    </td>
+    <td>${esc(enr)}</td>
+  </tr>`).join("");
+
+/* site ranking with interactive role filter */
+const mx = Math.max(...SITES.map(s => s[2]));
+let activeRole = "all";
+const SITE_FILTERS = [
+  ["all", `All sites (${SITES.length})`],
+  ["analog", "Established analog"],
+  ["saudi", "Saudi Arabia"],
+  ["control", "Control"],
+  ["background", "Background"]
+];
+
+function renderSites(){
+  const rows = activeRole === "all" ? SITES : SITES.filter(s => s[1] === activeRole);
+  $("#site-rows").innerHTML = rows.map(([n,role,v]) => {
+    const barColor = role === "analog" ? "var(--role-analog)" : role === "saudi" ? "var(--role-saudi)" : role === "control" ? "var(--role-control)" : "var(--role-bg)";
+    const roleCls = role === "analog" ? "role-analog" : role === "saudi" ? "role-saudi" : role === "control" ? "role-control" : "";
+    return `
+      <tr>
+        <td>${esc(n)}</td>
+        <td><span class="role-label ${roleCls}">${ROLE[role]}</span></td>
+        <td class="n">${v.toLocaleString()}</td>
+        <td class="bc">
+          <div class="bar-track">
+            <span class="bar" style="width:${v/mx*100}%;background:${barColor}"></span>
+          </div>
+        </td>
+      </tr>`;
+  }).join("");
+  document.querySelectorAll("#site-filters .btn").forEach(b =>
+    b.setAttribute("aria-pressed", String(b.dataset.role === activeRole)));
+}
+
+$("#site-filters").innerHTML = SITE_FILTERS
+  .map(([r, label]) => `<button type="button" class="btn" data-role="${r}" aria-pressed="${r==="all"}">${label}</button>`).join("");
+$("#site-filters").addEventListener("click", e => {
+  const b = e.target.closest(".btn");
+  if(!b) return;
+  activeRole = b.dataset.role;
+  renderSites();
+});
+renderSites();
+
+/* matched pairs */
+const GROUPS = [["all","All pairs"],["artemis","Artemis regions"],["regime","Terrain regimes"],["saudi","Saudi Arabia"]];
+let pairs = [], active = "all";
+
+function card(p, idx){
+  const ok = p.matched;
+  return `<div class="card" data-idx="${idx}" tabindex="0" role="button" aria-label="Inspect ${esc(p.label)} matched to ${esc(p.earth_place)}">
+    <figure>
+      <div class="card-img-wrap">
+        <span class="card-img-tag">Moon</span>
+        <img src="assets/pairs/${p.id}_moon.png" alt="Lunar terrain, ${esc(p.regime_name)}" loading="lazy" onerror="this.style.display='none'">
+      </div>
+      <div class="card-img-wrap">
+        <span class="card-img-tag">Earth</span>
+        <img src="assets/pairs/${p.id}_earth.png" alt="Terrestrial terrain at ${esc(p.earth_place)}" loading="lazy" onerror="this.style.display='none'">
+      </div>
+    </figure>
+    <p class="cap">
+      <b>${esc(p.label)}</b>
+      ${p.note ? `<span class="note">${esc(p.note)}</span>` : ""}
+      <span class="swatch" style="background:${RC[p.regime]}"></span>${RN[p.regime]} ${esc(p.regime_name)}<br>
+      nearest terrestrial patch: ${esc(p.earth_place)}
+      <span class="pair-dist ${ok?"":"unmatched"}">${ok ? "✓" : "×"} distance ${p.d_over_T.toFixed(2)}× threshold${ok?"":" — no good match"}</span>
+    </p>
+  </div>`;
+}
+
+function render(){
+  const list = active === "all" ? pairs : pairs.filter(p => p.group === active);
+  $("#grid").innerHTML = list.map((p) => card(p, pairs.indexOf(p))).join("");
+  document.querySelectorAll("#filters .btn").forEach(b =>
+    b.setAttribute("aria-pressed", String(b.dataset.g === active)));
+}
+
+/* pair modal inspector */
+const modal = $("#pair-modal");
+let lastFocused = null;
+function openPairModal(p){
+  if(!p) return;
+  lastFocused = document.activeElement;
+  $("#modal-title").textContent = p.label;
+  $("#modal-sub").textContent = `${RN[p.regime]} ${p.regime_name} · distance ${p.d_over_T.toFixed(2)}× threshold${p.matched ? "" : " (no good match)"}`;
+  $("#modal-moon-img").style.display = "block";
+  $("#modal-earth-img").style.display = "block";
+  $("#modal-moon-img").src = `assets/pairs/${p.id}_moon.png`;
+  $("#modal-earth-img").src = `assets/pairs/${p.id}_earth.png`;
+  $("#modal-moon-img").onerror = function(){ this.style.display = "none"; };
+  $("#modal-earth-img").onerror = function(){ this.style.display = "none"; };
+  $("#modal-moon-cap").textContent = p.moon
+    ? `relief ${p.moon.relief_m} m${p.moon.slope_p50 != null ? `, median slope ${p.moon.slope_p50}°` : ""}`
+    : `${RN[p.regime]} ${p.regime_name}`;
+  $("#modal-earth-title").textContent = p.earth_place;
+  $("#modal-earth-cap").textContent = p.earth ? `relief ${p.earth.relief_m} m, median slope ${p.earth.slope_p50}°` : p.earth_place;
+  modal.setAttribute("open", "");
+  $("#modal-close").focus();
+}
+function closePairModal(){
+  if(!modal.hasAttribute("open")) return;
+  modal.removeAttribute("open");
+  if(lastFocused && lastFocused.focus) lastFocused.focus();
+}
+$("#grid").addEventListener("click", e => {
+  const c = e.target.closest(".card");
+  if(!c) return;
+  openPairModal(pairs[Number(c.dataset.idx)]);
+});
+$("#grid").addEventListener("keydown", e => {
+  if(e.key === "Enter" || e.key === " "){
+    const c = e.target.closest(".card");
+    if(!c) return;
+    e.preventDefault();
+    openPairModal(pairs[Number(c.dataset.idx)]);
+  }
+});
+$("#modal-close").addEventListener("click", closePairModal);
+modal.addEventListener("click", e => { if(e.target === modal) closePairModal(); });
+document.addEventListener("keydown", e => { if(e.key === "Escape") closePairModal(); });
+
+function bindHeroPlate(img){
+  img.addEventListener("load", () => img.classList.add("is-loaded"));
+  img.addEventListener("error", () => img.classList.remove("is-loaded"));
+}
+bindHeroPlate($("#hero-moon"));
+bindHeroPlate($("#hero-earth"));
+
+fetch("data/pairs.json")
+  .then(r => { if(!r.ok) throw new Error(r.status); return r.json(); })
+  .then(data => {
+    pairs = data;
+    const hero = data.find(p => p.hero) || data.find(p => p.matched) || data[0];
+    if(hero){
+      $("#hero-moon").src = `assets/pairs/${hero.id}_moon.png`;
+      $("#hero-earth").src = `assets/pairs/${hero.id}_earth.png`;
+      $("#hero-moon-sub").textContent =
+        `${RN[hero.regime]} ${hero.regime_name}, relief ${hero.moon.relief_m} m`;
+      $("#hero-earth-name").textContent = hero.earth_place;
+      $("#hero-earth-sub").textContent =
+        `relief ${hero.earth.relief_m} m, median slope ${hero.earth.slope_p50}°`;
+      $("#hero-d").textContent = hero.d_over_T.toFixed(2) + "×";
+      $("#hero-bar").style.width = Math.min(hero.d_over_T, 1) * 100 + "%";
+      if(!hero.matched){
+        $("#hero-bar").style.background = "var(--signal)";
+        $("#hero-d").style.color = "var(--signal)";
+        $(".hero-note").textContent = "Both squares are 5.12 km across, shaded by the same low sun. "
+          + "One is on the Moon. This is the closest terrestrial terrain the model could find for it — "
+          + "and it is still further away than lunar terrain typically sits from other lunar terrain.";
+      }
+    }
+    $("#filters").innerHTML = GROUPS
+      .filter(([g]) => g === "all" || data.some(p => p.group === g))
+      .map(([g,l]) => `<button type="button" class="btn" data-g="${g}" aria-pressed="${g==="all"}">${l}</button>`).join("");
+    $("#filters").addEventListener("click", e => {
+      const b = e.target.closest(".btn"); if(!b) return;
+      active = b.dataset.g; render();
+    });
+    render();
+    $("#status").textContent = `${data.length} pairs exported from the matching results.`;
+  })
+  .catch(() => {
+    $("#status").innerHTML = `Pair images could not be loaded. Run <code>python src/export_web.py</code>,
+      then serve this folder with <code>python -m http.server</code> — opening the file directly
+      blocks the data request.`;
+    $("#hero-moon-sub").textContent = "run export_web.py";
+    $("#hero-earth-sub").textContent = "run export_web.py";
+  });
+</script>
+</body>
+</html>
