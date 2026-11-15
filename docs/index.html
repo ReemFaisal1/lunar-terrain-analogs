@@ -656,7 +656,7 @@ h3{
   color:var(--cyan);
 }
 .pair-dist.unmatched{
-  color:var(--r2);
+  color:var(--signal);
 }
 
 #status{
@@ -825,7 +825,7 @@ ol.limits li{
   margin:0;
 }
 ol.limits li::before{
-  content:"0" counter(limit-counter);
+  content:counter(limit-counter, decimal-leading-zero);
   position:absolute;
   left:0;
   top:1.12rem;
@@ -1066,8 +1066,8 @@ ol.limits li::before{
         </figure>
       </div>
       <p class="hero-note">Both squares are 5.12 km across, shaded by the same low sun. One is on the Moon.
-        The model placed them beside each other because their shapes are as close as two pieces of lunar
-        terrain from opposite sides of the pole.</p>
+        The model placed them beside each other because their shapes are closer than lunar terrain
+        typically is to lunar terrain elsewhere on the Moon.</p>
     </div>
   </div>
 </div>
@@ -1076,19 +1076,22 @@ ol.limits li::before{
   <div class="sheet row">
     <p class="lbl"><span class="sec-num">01</span>The finding<span>what the matching reveals</span></p>
     <div>
-      <h2>Three quarters of the lunar south pole has no good terrestrial match in this sample</h2>
-      <p class="lede">Matching every lunar patch against 66,218 terrestrial ones, 27.3% find an Earth
-        counterpart as close as lunar terrain is to other lunar terrain. The shortfall is not spread
-        evenly. It concentrates in one kind of landscape.</p>
+      <h2>Earth is about half as good a source of lunar terrain as the Moon itself — and almost no source of its ridges and rims</h2>
+      <p class="lede">A lunar patch counts as matched when something is as close to it as lunar terrain
+        typically is to lunar terrain in other regions. By that definition the Moon matches its own
+        held-out terrain half the time. Earth, given an equally large pool of patches, matches it
+        26.8% of the time: 0.54 times as good a source as the Moon itself.</p>
+      <p>The shortfall is not spread evenly. Earth's usefulness falls steadily as relief rises.</p>
       <div class="ramp" id="ramp"></div>
       <p>The four regimes emerged from clustering the learned representation, with no human
         labelling. Their physical properties were measured afterwards, from descriptors the model
         never saw, and they line up: relief and slope rise steadily across the ramp. Separation is
         weak by design — these are four stable positions along a continuum, not discrete types.</p>
       <p><b>R2 is the problem.</b> Steep, high-relief ridge and rim terrain makes up an eighth of the
-        lunar south pole and finds a match in 0.5% of cases. The Earth sites rugged enough to
-        qualify — the Alps, the Himalaya — are rugged in the wrong way, carved by ice rather than
-        built by impact.</p>
+        lunar south pole. Other lunar regions supply a match for it 18.1% of the time; Earth supplies
+        one 0.3% of the time — fifty times less. This is not R2 simply being unusual, since the Moon
+        still matches it. The Earth sites rugged enough to qualify — the Alps, the Himalaya — are
+        rugged in the wrong way, carved by ice rather than built by impact.</p>
     </div>
   </div>
 </section>
@@ -1115,14 +1118,18 @@ ol.limits li::before{
     <p class="lbl"><span class="sec-num">03</span>Artemis III<span>candidate landing regions</span></p>
     <div>
       <h2>The regions NASA is most interested in are the hardest to rehearse</h2>
-      <p>Six candidate landing regions were projected onto the lunar grid using feature centres from
-        the USGS/IAU gazetteer. The pattern across them follows the regime result: the more R2
-        terrain a region contains, the less of it Earth can supply.</p>
+      <p>Six of NASA's candidate landing regions, each approximated by the crater or massif it is
+        named after. The pattern follows the regime result: the more R2 terrain a region contains,
+        the less of it Earth can supply. For comparison, Earth matches 27.3% of the whole south pole
+        on the same measure.</p>
       <div class="table-wrap">
         <table>
-          <caption>Enrichment divides a site's share of matches by its share of the Earth sample, so it
-            separates genuine similarity from sample size. With six regions this is a visible pattern,
-            not a statistically established correlation.</caption>
+          <caption>NASA's candidate regions are about 15 km across; each is approximated here by the
+            full USGS/IAU gazetteer disk of its named feature, which contains the region but is
+            larger — for Peak near Shackleton, Shackleton crater itself. Enrichment divides a site's
+            share of matches by its share of the Earth sample, separating genuine similarity from
+            sample size. With six regions this is a visible pattern, not a statistically established
+            correlation.</caption>
           <thead><tr><th>Region</th><th class="n">Latitude</th><th class="n">R2 share</th><th class="n">Matched</th><th class="bc"></th><th>Earth terrain supplying the matches</th></tr></thead>
           <tbody id="artemis-rows"></tbody>
         </table>
@@ -1176,7 +1183,8 @@ ol.limits li::before{
         <table class="val-table">
           <thead><tr><th>Question</th><th>Test</th><th>Result</th></tr></thead>
           <tbody>
-            <tr><td>Beyond steepness?</td><td>predicting terrain enclosure on held-out regions</td><td>lunar R² 0.07 from slope and relief alone, 0.33 adding the embedding; gain +0.198, 95% CI +0.064 to +0.338</td></tr>
+            <tr><td>Beyond steepness?</td><td>predicting terrain enclosure on held-out regions</td><td>R² gain from adding the embedding +0.198, 95% CI +0.064 to +0.338, across both bodies; on the Moon alone, 0.07 from slope and relief rises to 0.33</td></tr>
+            <tr><td>Is coverage judged fairly?</td><td>Moon matched against itself at the same threshold</td><td>the Moon matches its own held-out terrain 50.0% of the time; Earth, with an equal-sized pool, 26.8% — 0.54× as good a source</td></tr>
             <tr><td>Better than simple features?</td><td>ranking analog sites above controls</td><td>AUC 0.786 against 0.643, permutation p = 0.022</td></tr>
             <tr><td>Just site size?</td><td>ranking adjusted for patch count</td><td>AUC 0.72, p = 0.031; the largest analog still ranks third</td></tr>
             <tr><td>Did it just learn which planet?</td><td>Moon-vs-Earth classifier</td><td>0.952 from the embedding, but <b>0.981</b> from five plain slope statistics — the gap is real terrain difference</td></tr>
@@ -1207,6 +1215,10 @@ ol.limits li::before{
           arguably analogs themselves, which makes the contrast conservative.</li>
         <li><b>The match threshold is model-relative</b>, calibrated on held-out lunar terrain rather
           than against an established scientific criterion.</li>
+        <li><b>Coverage is relative, not absolute.</b> The threshold is set so the Moon matches its own
+          terrain half the time, so Earth's figures are only meaningful beside that baseline.</li>
+        <li><b>Artemis regions are approximated</b> by the full disk of each named feature, which is
+          larger than NASA's ~15 km candidate region.</li>
         <li><b>A single training run.</b> Sensitivity to the random seed is untested.</li>
         <li><b>Mars is out of scope.</b> The same pipeline runs on MOLA elevation unchanged, but was
           not run.</li>
@@ -1223,7 +1235,7 @@ ol.limits li::before{
     <p><b>Method.</b> Convolutional autoencoder to a 64-dimensional embedding, trained from scratch
       on balanced lunar and terrestrial batches with dihedral augmentation; k-means regimes;
       nearest-neighbour matching. No pretrained model and no language model is part of the pipeline.
-      Code and full method: <a href="https://github.com/" id="repo-link">project repository</a>.</p>
+      Code and full method: <a href="https://github.com/ReemFaisal1/lunar-terrain-analogs" id="repo-link">github.com/ReemFaisal1/lunar-terrain-analogs</a>.</p>
   </div>
 </footer>
 
@@ -1251,10 +1263,10 @@ ol.limits li::before{
 
 <script>
 const REGIMES = [
-  {k:"R1", name:"gentle terrain",        n:"46%", relief:156, slope:4.1, cov:46.7, c:"var(--r1)"},
-  {k:"R0", name:"moderate relief",       n:"28%", relief:219, slope:5.4, cov:17.3, c:"var(--r0)"},
-  {k:"R3", name:"basins and depressions",n:"14%", relief:280, slope:6.6, cov:7.5,  c:"var(--r3)"},
-  {k:"R2", name:"steep ridges and rims", n:"12%", relief:401, slope:8.6, cov:0.5,  c:"var(--r2)"},
+  {k:"R1", name:"gentle terrain",        n:"46%", relief:156, slope:4.1, self:64.2, earth:45.0, ratio:0.70, c:"var(--r1)"},
+  {k:"R0", name:"moderate relief",       n:"28%", relief:219, slope:5.4, self:40.3, earth:16.5, ratio:0.41, c:"var(--r0)"},
+  {k:"R3", name:"basins and depressions",n:"14%", relief:280, slope:6.6, self:47.4, earth:7.6,  ratio:0.16, c:"var(--r3)"},
+  {k:"R2", name:"steep ridges and rims", n:"12%", relief:401, slope:8.6, self:18.1, earth:0.3,  ratio:0.02, c:"var(--r2)"},
 ];
 const RC = {0:"var(--r0)", 1:"var(--r1)", 2:"var(--r2)", 3:"var(--r3)"};
 const RN = {0:"R0", 1:"R1", 2:"R2", 3:"R3"};
@@ -1295,12 +1307,14 @@ $("#ramp").innerHTML = REGIMES.map(r => `
     <div class="ramp-name">${esc(r.name)}</div>
     <div class="ramp-metrics">
       <div>relief ${r.relief} m · slope ${r.slope}°</div>
+      <div>Moon matches itself ${r.self}%</div>
+      <div>Earth matches it ${r.earth}%</div>
       <div class="ramp-cov-row">
-        <span>matched on Earth</span>
-        <span class="ramp-cov-val"${r.cov < 10 ? ' style="color:var(--signal)"' : ""}>${r.cov}%</span>
+        <span>Earth, relative to the Moon</span>
+        <span class="ramp-cov-val"${r.ratio < 0.2 ? ' style="color:var(--signal)"' : ""}>${r.ratio.toFixed(2)}×</span>
       </div>
       <div class="ramp-meter" aria-hidden="true">
-        <div class="ramp-meter-fill" style="width:${Math.max(r.cov, 2)}%;background:${r.cov < 10 ? "var(--signal)" : r.c}"></div>
+        <div class="ramp-meter-fill" style="width:${Math.max(r.ratio * 100, 2)}%;background:${r.ratio < 0.2 ? "var(--signal)" : r.c}"></div>
       </div>
     </div>
   </div>`).join("");
@@ -1314,7 +1328,7 @@ $("#artemis-rows").innerHTML = ARTEMIS.map(([n,lat,r2,cov,enr]) => `
     <td class="n">${cov}%</td>
     <td class="bc">
       <div class="bar-track">
-        <span class="bar" style="width:${cov/45*100}%;background:${cov<16?"var(--r2)":"var(--r0)"}"></span>
+        <span class="bar" style="width:${cov/45*100}%;background:${cov<16?"var(--signal)":"var(--r3)"}"></span>
       </div>
     </td>
     <td>${esc(enr)}</td>

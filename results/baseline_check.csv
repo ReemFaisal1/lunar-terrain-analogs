@@ -1,0 +1,6 @@
+regime,n_heldout,moon_matches_itself_pct,earth_pct,earth_equal_pool_pct,earth_over_moon,median_d_moon_over_T,median_d_earth_over_T
+R1 gentle,5017,64.2,48.3,45.0,0.7,0.88,1.02
+R0 moderate,3014,40.3,18.5,16.5,0.41,1.07,1.35
+R3 basins,1493,47.4,8.7,7.6,0.16,1.03,1.56
+R2 ridges/rims,1196,18.1,0.4,0.3,0.02,1.28,1.91
+all held-out,10720,50.0,29.1,26.8,0.54,1.0,1.27
