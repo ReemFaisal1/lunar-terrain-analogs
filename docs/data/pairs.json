@@ -1,0 +1,434 @@
+[
+ {
+  "id": "p00",
+  "group": "artemis",
+  "label": "Haworth",
+  "note": "typical patch in this region",
+  "hero": false,
+  "regime": 1,
+  "regime_name": "gentle terrain",
+  "d_over_T": 1.11,
+  "matched": false,
+  "moon": {
+   "relief_m": 185,
+   "slope_p50": 4.6,
+   "rough_m": 2.22
+  },
+  "earth": {
+   "relief_m": 301,
+   "slope_p50": 2.7,
+   "rough_m": 4.26
+  },
+  "earth_site": "grand_canyon",
+  "earth_place": "Grand Canyon, USA",
+  "earth_role": "background"
+ },
+ {
+  "id": "p01",
+  "group": "artemis",
+  "label": "Faustini Rim A",
+  "note": "typical patch in this region",
+  "hero": false,
+  "regime": 2,
+  "regime_name": "steep ridges and rims",
+  "d_over_T": 1.2,
+  "matched": false,
+  "moon": {
+   "relief_m": 322,
+   "slope_p50": 7.8,
+   "rough_m": 3.36
+  },
+  "earth": {
+   "relief_m": 309,
+   "slope_p50": 8.4,
+   "rough_m": 3.34
+  },
+  "earth_site": "etna",
+  "earth_place": "Mount Etna, Italy",
+  "earth_role": "background"
+ },
+ {
+  "id": "p02",
+  "group": "artemis",
+  "label": "Peak near Shackleton",
+  "note": "typical patch in this region",
+  "hero": false,
+  "regime": 2,
+  "regime_name": "steep ridges and rims",
+  "d_over_T": 1.49,
+  "matched": false,
+  "moon": {
+   "relief_m": 459,
+   "slope_p50": 8.5,
+   "rough_m": 2.97
+  },
+  "earth": {
+   "relief_m": 394,
+   "slope_p50": 7.9,
+   "rough_m": 2.35
+  },
+  "earth_site": "hawaii",
+  "earth_place": "Hawaii, USA",
+  "earth_role": "known_analog"
+ },
+ {
+  "id": "p03",
+  "group": "artemis",
+  "label": "Malapert Massif",
+  "note": "typical patch in this region",
+  "hero": false,
+  "regime": 0,
+  "regime_name": "moderate relief",
+  "d_over_T": 1.29,
+  "matched": false,
+  "moon": {
+   "relief_m": 204,
+   "slope_p50": 5.8,
+   "rough_m": 3.51
+  },
+  "earth": {
+   "relief_m": 227,
+   "slope_p50": 6.7,
+   "rough_m": 3.09
+  },
+  "earth_site": "atacama",
+  "earth_place": "Atacama, Chile",
+  "earth_role": "known_analog"
+ },
+ {
+  "id": "p04",
+  "group": "artemis",
+  "label": "Nobile Rim",
+  "note": "typical patch in this region",
+  "hero": false,
+  "regime": 0,
+  "regime_name": "moderate relief",
+  "d_over_T": 1.5,
+  "matched": false,
+  "moon": {
+   "relief_m": 241,
+   "slope_p50": 6.0,
+   "rough_m": 2.4
+  },
+  "earth": {
+   "relief_m": 235,
+   "slope_p50": 5.2,
+   "rough_m": 6.12
+  },
+  "earth_site": "svalbard",
+  "earth_place": "Svalbard, Norway",
+  "earth_role": "background"
+ },
+ {
+  "id": "p05",
+  "group": "artemis",
+  "label": "de Gerlache Rim",
+  "note": "typical patch in this region",
+  "hero": false,
+  "regime": 0,
+  "regime_name": "moderate relief",
+  "d_over_T": 1.71,
+  "matched": false,
+  "moon": {
+   "relief_m": 361,
+   "slope_p50": 8.8,
+   "rough_m": 4.32
+  },
+  "earth": {
+   "relief_m": 227,
+   "slope_p50": 8.0,
+   "rough_m": 5.3
+  },
+  "earth_site": "atacama",
+  "earth_place": "Atacama, Chile",
+  "earth_role": "known_analog"
+ },
+ {
+  "id": "p06",
+  "group": "regime",
+  "label": "R0  moderate relief",
+  "note": "closest match found anywhere",
+  "hero": true,
+  "regime": 0,
+  "regime_name": "moderate relief",
+  "d_over_T": 0.32,
+  "matched": true,
+  "moon": {
+   "relief_m": 52,
+   "slope_p50": 2.0,
+   "rough_m": 3.24
+  },
+  "earth": {
+   "relief_m": 75,
+   "slope_p50": 1.3,
+   "rough_m": 0.65
+  },
+  "earth_site": "namib",
+  "earth_place": "Namib Desert, Namibia",
+  "earth_role": "background"
+ },
+ {
+  "id": "p07",
+  "group": "regime",
+  "label": "R0  moderate relief",
+  "note": "typical member of this regime",
+  "hero": false,
+  "regime": 0,
+  "regime_name": "moderate relief",
+  "d_over_T": 1.37,
+  "matched": false,
+  "moon": {
+   "relief_m": 185,
+   "slope_p50": 4.6,
+   "rough_m": 3.79
+  },
+  "earth": {
+   "relief_m": 144,
+   "slope_p50": 4.3,
+   "rough_m": 2.74
+  },
+  "earth_site": "atacama",
+  "earth_place": "Atacama, Chile",
+  "earth_role": "known_analog"
+ },
+ {
+  "id": "p08",
+  "group": "regime",
+  "label": "R1  gentle terrain",
+  "note": "closest match found anywhere",
+  "hero": false,
+  "regime": 1,
+  "regime_name": "gentle terrain",
+  "d_over_T": 0.17,
+  "matched": true,
+  "moon": {
+   "relief_m": 19,
+   "slope_p50": 1.2,
+   "rough_m": 2.24
+  },
+  "earth": {
+   "relief_m": 17,
+   "slope_p50": 1.5,
+   "rough_m": 1.49
+  },
+  "earth_site": "rub_al_khali",
+  "earth_place": "Rub' al Khali, Saudi Arabia",
+  "earth_role": "saudi"
+ },
+ {
+  "id": "p09",
+  "group": "regime",
+  "label": "R1  gentle terrain",
+  "note": "typical member of this regime",
+  "hero": false,
+  "regime": 1,
+  "regime_name": "gentle terrain",
+  "d_over_T": 1.04,
+  "matched": false,
+  "moon": {
+   "relief_m": 104,
+   "slope_p50": 3.9,
+   "rough_m": 3.37
+  },
+  "earth": {
+   "relief_m": 81,
+   "slope_p50": 4.1,
+   "rough_m": 3.96
+  },
+  "earth_site": "etna",
+  "earth_place": "Mount Etna, Italy",
+  "earth_role": "background"
+ },
+ {
+  "id": "p10",
+  "group": "regime",
+  "label": "R2  steep ridges and rims",
+  "note": "closest match found anywhere",
+  "hero": false,
+  "regime": 2,
+  "regime_name": "steep ridges and rims",
+  "d_over_T": 0.7,
+  "matched": true,
+  "moon": {
+   "relief_m": 244,
+   "slope_p50": 6.2,
+   "rough_m": 3.31
+  },
+  "earth": {
+   "relief_m": 185,
+   "slope_p50": 4.3,
+   "rough_m": 4.47
+  },
+  "earth_site": "grand_canyon",
+  "earth_place": "Grand Canyon, USA",
+  "earth_role": "background"
+ },
+ {
+  "id": "p11",
+  "group": "regime",
+  "label": "R2  steep ridges and rims",
+  "note": "typical member of this regime",
+  "hero": false,
+  "regime": 2,
+  "regime_name": "steep ridges and rims",
+  "d_over_T": 1.9,
+  "matched": false,
+  "moon": {
+   "relief_m": 355,
+   "slope_p50": 10.4,
+   "rough_m": 4.15
+  },
+  "earth": {
+   "relief_m": 323,
+   "slope_p50": 8.3,
+   "rough_m": 5.04
+  },
+  "earth_site": "death_valley",
+  "earth_place": "Death Valley, USA",
+  "earth_role": "known_analog"
+ },
+ {
+  "id": "p12",
+  "group": "regime",
+  "label": "R3  basins and depressions",
+  "note": "closest match found anywhere",
+  "hero": false,
+  "regime": 3,
+  "regime_name": "basins and depressions",
+  "d_over_T": 0.41,
+  "matched": true,
+  "moon": {
+   "relief_m": 177,
+   "slope_p50": 4.1,
+   "rough_m": 2.81
+  },
+  "earth": {
+   "relief_m": 173,
+   "slope_p50": 3.4,
+   "rough_m": 1.81
+  },
+  "earth_site": "death_valley",
+  "earth_place": "Death Valley, USA",
+  "earth_role": "known_analog"
+ },
+ {
+  "id": "p13",
+  "group": "regime",
+  "label": "R3  basins and depressions",
+  "note": "typical member of this regime",
+  "hero": false,
+  "regime": 3,
+  "regime_name": "basins and depressions",
+  "d_over_T": 1.6,
+  "matched": false,
+  "moon": {
+   "relief_m": 222,
+   "slope_p50": 5.4,
+   "rough_m": 2.42
+  },
+  "earth": {
+   "relief_m": 160,
+   "slope_p50": 3.8,
+   "rough_m": 2.71
+  },
+  "earth_site": "grand_canyon",
+  "earth_place": "Grand Canyon, USA",
+  "earth_role": "background"
+ },
+ {
+  "id": "p14",
+  "group": "saudi",
+  "label": "Lunar terrain nearest Tuwayq Escarpment",
+  "note": "its closest terrestrial neighbour",
+  "hero": false,
+  "regime": 1,
+  "regime_name": "gentle terrain",
+  "d_over_T": 0.25,
+  "matched": true,
+  "moon": {
+   "relief_m": 20,
+   "slope_p50": 1.4,
+   "rough_m": 2.92
+  },
+  "earth": {
+   "relief_m": 30,
+   "slope_p50": 1.0,
+   "rough_m": 0.94
+  },
+  "earth_site": "tuwayq",
+  "earth_place": "Tuwayq Escarpment, Saudi Arabia",
+  "earth_role": "saudi"
+ },
+ {
+  "id": "p15",
+  "group": "saudi",
+  "label": "Lunar terrain nearest Tuwayq Escarpment",
+  "note": "its closest terrestrial neighbour",
+  "hero": false,
+  "regime": 1,
+  "regime_name": "gentle terrain",
+  "d_over_T": 0.85,
+  "matched": true,
+  "moon": {
+   "relief_m": 129,
+   "slope_p50": 4.5,
+   "rough_m": 3.19
+  },
+  "earth": {
+   "relief_m": 113,
+   "slope_p50": 1.1,
+   "rough_m": 2.87
+  },
+  "earth_site": "tuwayq",
+  "earth_place": "Tuwayq Escarpment, Saudi Arabia",
+  "earth_role": "saudi"
+ },
+ {
+  "id": "p16",
+  "group": "saudi",
+  "label": "Lunar terrain nearest Asir Mountains",
+  "note": "its closest terrestrial neighbour",
+  "hero": false,
+  "regime": 1,
+  "regime_name": "gentle terrain",
+  "d_over_T": 0.21,
+  "matched": true,
+  "moon": {
+   "relief_m": 24,
+   "slope_p50": 1.3,
+   "rough_m": 2.08
+  },
+  "earth": {
+   "relief_m": 27,
+   "slope_p50": 1.0,
+   "rough_m": 0.83
+  },
+  "earth_site": "asir",
+  "earth_place": "Asir Mountains, Saudi Arabia",
+  "earth_role": "saudi"
+ },
+ {
+  "id": "p17",
+  "group": "saudi",
+  "label": "Lunar terrain nearest Asir Mountains",
+  "note": "its closest terrestrial neighbour",
+  "hero": false,
+  "regime": 1,
+  "regime_name": "gentle terrain",
+  "d_over_T": 0.99,
+  "matched": true,
+  "moon": {
+   "relief_m": 119,
+   "slope_p50": 4.1,
+   "rough_m": 2.94
+  },
+  "earth": {
+   "relief_m": 78,
+   "slope_p50": 3.1,
+   "rough_m": 3.22
+  },
+  "earth_site": "asir",
+  "earth_place": "Asir Mountains, Saudi Arabia",
+  "earth_role": "saudi"
+ }
+]
